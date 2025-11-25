@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, ThumbsUp, ThumbsDown, Share2, Flag, Play, Pause, Volume2, VolumeX, Maximize, Minimize, SkipForward } from 'lucide-react';
+import { ArrowLeft, ThumbsUp, ThumbsDown, Share2, Flag, Play, Pause, Volume2, VolumeX, Maximize, Minimize, SkipForward, SkipBack } from 'lucide-react';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import { ShortVideo, Comment } from '@/types';
@@ -15,6 +15,8 @@ export default function VideoPage() {
   
   const [video, setVideo] = useState<ShortVideo | null>(null);
   const [relatedVideos, setRelatedVideos] = useState<ShortVideo[]>([]);
+  const [allVideos, setAllVideos] = useState<ShortVideo[]>([]);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState<number>(-1);
   const [loading, setLoading] = useState(true);
   const [videoLoading, setVideoLoading] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
@@ -33,7 +35,16 @@ export default function VideoPage() {
   const [newComment, setNewComment] = useState('');
   const [userRating, setUserRating] = useState(0);
   const [hasRated, setHasRated] = useState(false);
-  const [autoPlay, setAutoPlay] = useState(false);
+  const [autoPlay, setAutoPlay] = useState(true); // Default to true for autoplay experience
+  const [autoPlayCountdown, setAutoPlayCountdown] = useState<number | null>(null);
+  const [nextVideoId, setNextVideoId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (nextVideoId) {
+      router.push(`/shorts/${nextVideoId}`);
+      setNextVideoId(null);
+    }
+  }, [nextVideoId, router]);
 
   useEffect(() => {
     const fetchVideo = async () => {
@@ -51,6 +62,13 @@ export default function VideoPage() {
             .filter(v => v.id !== foundVideo.id && v.tags.some(tag => foundVideo.tags.includes(tag)))
             .slice(0, 8);
           setRelatedVideos(related);
+          
+          // Get all videos for navigation
+          setAllVideos(videos);
+          
+          // Find current video index
+          const currentIndex = videos.findIndex(v => v.id === params.id);
+          setCurrentVideoIndex(currentIndex);
         } else {
           router.push('/');
         }
@@ -64,6 +82,71 @@ export default function VideoPage() {
 
     fetchVideo();
   }, [params.id, router]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return; // Don't handle keyboard shortcuts when typing
+      }
+
+      switch (e.key) {
+        case 'ArrowRight':
+        case ' ':
+          e.preventDefault();
+          goToNextVideo();
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          goToPreviousVideo();
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          if (videoRef.current) {
+            videoRef.current.volume = Math.min(1, videoRef.current.volume + 0.1);
+            setVolume(videoRef.current.volume);
+          }
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          if (videoRef.current) {
+            videoRef.current.volume = Math.max(0, videoRef.current.volume - 0.1);
+            setVolume(videoRef.current.volume);
+          }
+          break;
+        case 'm':
+        case 'M':
+          e.preventDefault();
+          if (videoRef.current) {
+            videoRef.current.muted = !videoRef.current.muted;
+            setIsMuted(videoRef.current.muted);
+          }
+          break;
+        case 'f':
+        case 'F':
+          e.preventDefault();
+          toggleFullscreen();
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [allVideos, currentVideoIndex]);
+
+  // Auto-play video when loaded
+  useEffect(() => {
+    if (videoRef.current && !loading && video) {
+      // Auto-play if coming from another video or if autoplay is enabled
+      const shouldAutoPlay = autoPlay || document.referrer.includes('/shorts/');
+      if (shouldAutoPlay) {
+        videoRef.current.play().catch(() => {
+          // Auto-play failed (likely due to browser policy), show play button
+          setIsPlaying(false);
+        });
+      }
+    }
+  }, [video, loading, autoPlay]);
 
   // Video player functions
   const togglePlay = () => {
@@ -219,6 +302,22 @@ export default function VideoPage() {
     }
   };
 
+  const goToNextVideo = () => {
+    if (allVideos.length === 0 || currentVideoIndex === -1) return;
+    
+    const nextIndex = (currentVideoIndex + 1) % allVideos.length;
+    const nextVideo = allVideos[nextIndex];
+    setNextVideoId(nextVideo.id);
+  };
+
+  const goToPreviousVideo = () => {
+    if (allVideos.length === 0 || currentVideoIndex === -1) return;
+    
+    const prevIndex = currentVideoIndex === 0 ? allVideos.length - 1 : currentVideoIndex - 1;
+    const prevVideo = allVideos[prevIndex];
+    setNextVideoId(prevVideo.id);
+  };
+
   if (loading) {
     return (
       <>
@@ -270,10 +369,19 @@ export default function VideoPage() {
                   onLoadedData={() => setVideoLoading(false)}
                   onEnded={() => {
                     setIsPlaying(false);
-                    if (autoPlay && relatedVideos.length > 0) {
-                      // Auto-play next related video
-                      const nextVideo = relatedVideos[0];
-                      router.push(`/shorts/${nextVideo.id}`);
+                    if (autoPlay && allVideos.length > 1) {
+                      // Start countdown for auto-play
+                      setAutoPlayCountdown(3);
+                      const countdownInterval = setInterval(() => {
+                        setAutoPlayCountdown(prev => {
+                          if (prev === null || prev <= 1) {
+                            clearInterval(countdownInterval);
+                            goToNextVideo();
+                            return null;
+                          }
+                          return prev - 1;
+                        });
+                      }, 1000);
                     }
                   }}
                 />
@@ -300,8 +408,34 @@ export default function VideoPage() {
                   </div>
                 )}
 
+                {/* Auto-play Countdown */}
+                {autoPlayCountdown !== null && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                    <div className="text-center">
+                      <div className="text-white text-6xl font-bold mb-4">{autoPlayCountdown}</div>
+                      <div className="text-white text-lg">Next video in...</div>
+                      <button
+                        onClick={() => {
+                          setAutoPlayCountdown(null);
+                          goToNextVideo();
+                        }}
+                        className="mt-4 px-6 py-2 bg-[#E50914] text-white rounded-full hover:bg-[#c20913] transition-colors"
+                      >
+                        Skip
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Custom Controls */}
                 <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 transition-opacity ${showControls ? 'opacity-100' : 'opacity-0'}`}>
+                  {/* Keyboard Shortcuts Hint */}
+                  <div className="text-center mb-2">
+                    <span className="text-white/60 text-xs">
+                      Use ← → arrow keys to navigate • Space to play/pause
+                    </span>
+                  </div>
+
                   {/* Progress Bar */}
                   <input
                     type="range"
@@ -348,6 +482,15 @@ export default function VideoPage() {
                     </div>
 
                     <div className="flex items-center gap-3">
+                      {/* Previous Video */}
+                      <button
+                        onClick={goToPreviousVideo}
+                        className="text-white hover:text-[#E50914] transition-colors"
+                        title="Previous video (←)"
+                      >
+                        <SkipBack className="h-5 w-5" />
+                      </button>
+
                       {/* Auto-play Toggle */}
                       <button
                         onClick={() => setAutoPlay(!autoPlay)}
@@ -358,6 +501,15 @@ export default function VideoPage() {
                       >
                         <SkipForward className="h-5 w-5" />
                         <span className="text-sm">Auto</span>
+                      </button>
+
+                      {/* Next Video */}
+                      <button
+                        onClick={goToNextVideo}
+                        className="text-white hover:text-[#E50914] transition-colors"
+                        title="Next video (→)"
+                      >
+                        <SkipForward className="h-5 w-5" />
                       </button>
 
                       {/* Fullscreen */}
@@ -518,56 +670,65 @@ export default function VideoPage() {
             {/* Related Videos Sidebar */}
             <div className="lg:col-span-1">
               {/* Up Next */}
-              {autoPlay && relatedVideos.length > 0 && (
+              {autoPlay && allVideos.length > 1 && (
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
                     <SkipForward className="h-5 w-5 text-[#E50914]" />
                     Up Next
                   </h3>
-                  <Link
-                    href={`/shorts/${relatedVideos[0].id}`}
-                    className="block group cursor-pointer"
-                  >
-                    <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-800 mb-3">
-                      <video
-                        src={relatedVideos[0].videoUrl}
-                        className="w-full h-full object-cover"
-                        muted
-                        preload="metadata"
-                      />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center">
-                        <Play className="h-10 w-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </div>
-                      <span className="absolute bottom-2 right-2 bg-black/80 px-2 py-1 text-xs text-white rounded">
-                        {formatDuration(relatedVideos[0].duration)}
-                      </span>
-                      {relatedVideos[0].quality && (
-                        <span className="absolute top-2 left-2 bg-[#E50914]/90 px-2 py-1 text-xs text-white rounded">
-                          {relatedVideos[0].quality}
-                        </span>
-                      )}
-                    </div>
-                    <h4 className="text-sm font-medium text-white line-clamp-2 group-hover:text-[#E50914] transition-colors">
-                      {relatedVideos[0].title}
-                    </h4>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {formatCount(relatedVideos[0].likes)} views
-                    </p>
-                  </Link>
+                  {(() => {
+                    const nextIndex = (currentVideoIndex + 1) % allVideos.length;
+                    const nextVideo = allVideos[nextIndex];
+                    return (
+                      <Link
+                        href={`/shorts/${nextVideo.id}`}
+                        className="block group cursor-pointer"
+                        onClick={() => setAutoPlayCountdown(null)}
+                      >
+                        <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-800 mb-3">
+                          <video
+                            src={nextVideo.videoUrl}
+                            className="w-full h-full object-cover"
+                            muted
+                            preload="metadata"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center">
+                            <Play className="h-10 w-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                          <span className="absolute bottom-2 right-2 bg-black/80 px-2 py-1 text-xs text-white rounded">
+                            {formatDuration(nextVideo.duration)}
+                          </span>
+                          {nextVideo.quality && (
+                            <span className="absolute top-2 left-2 bg-[#E50914]/90 px-2 py-1 text-xs text-white rounded">
+                              {nextVideo.quality}
+                            </span>
+                          )}
+                        </div>
+                        <h4 className="text-sm font-medium text-white line-clamp-2 group-hover:text-[#E50914] transition-colors">
+                          {nextVideo.title}
+                        </h4>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {formatCount(nextVideo.likes)} views
+                        </p>
+                      </Link>
+                    );
+                  })()}
                 </div>
               )}
 
-              <h2 className="text-xl font-semibold text-white mb-4">Related Videos</h2>
+              <h2 className="text-xl font-semibold text-white mb-4">More Videos</h2>
               <div className="space-y-3">
-                {relatedVideos.map((relatedVideo) => (
+                {allVideos.slice(currentVideoIndex + 1, currentVideoIndex + 6).concat(
+                  allVideos.slice(0, Math.max(0, 5 - (allVideos.length - currentVideoIndex - 1)))
+                ).map((nextVideo) => (
                   <Link
-                    key={relatedVideo.id}
-                    href={`/shorts/${relatedVideo.id}`}
+                    key={nextVideo.id}
+                    href={`/shorts/${nextVideo.id}`}
                     className="flex gap-3 group cursor-pointer"
                   >
                     <div className="relative w-40 aspect-video rounded-md overflow-hidden bg-gray-800 flex-shrink-0">
                       <video
-                        src={relatedVideo.videoUrl}
+                        src={nextVideo.videoUrl}
                         className="w-full h-full object-cover"
                         muted
                         preload="metadata"
@@ -576,18 +737,18 @@ export default function VideoPage() {
                         <Play className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
                       <span className="absolute bottom-1 right-1 bg-black/80 px-1.5 py-0.5 text-xs text-white rounded">
-                        {formatDuration(relatedVideo.duration)}
+                        {formatDuration(nextVideo.duration)}
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="text-sm font-medium text-white line-clamp-2 group-hover:text-[#E50914] transition-colors">
-                        {relatedVideo.title}
+                        {nextVideo.title}
                       </h3>
                       <p className="text-xs text-gray-400 mt-1">
-                        {formatCount(relatedVideo.likes)} views
+                        {formatCount(nextVideo.likes)} views
                       </p>
                       <div className="flex gap-1 mt-1">
-                        {relatedVideo.tags.slice(0, 2).map((tag) => (
+                        {nextVideo.tags.slice(0, 2).map((tag) => (
                           <span key={tag} className="text-xs text-gray-500">
                             #{tag}
                           </span>
