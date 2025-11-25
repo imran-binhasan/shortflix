@@ -7,8 +7,8 @@ This project is a mini Short-Flix platform built using Next.js and TypeScript wi
 
 ## 🚀 Live Demo
 
-- **Frontend:** [Your Vercel URL]
-- **API Endpoint:** [Your Vercel URL]/api/shorts
+- **Frontend:** https://shortflix-demo.vercel.app/
+- **API Endpoint:** https://shortflix-demo.vercel.app//api/shorts
 
 ## 🛠️ Tech Stack
 
