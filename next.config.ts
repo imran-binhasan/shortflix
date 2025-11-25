@@ -1,7 +1,26 @@
-import type { NextConfig } from "next";
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'www.w3schools.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'samplelib.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'commondatastorage.googleapis.com',
+      },
+    ],
+  },
+  // Next.js 16 optimizations
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
+  },
+}
 
-const nextConfig: NextConfig = {
-  /* config options here */
-};
-
-export default nextConfig;
+module.exports = nextConfig
