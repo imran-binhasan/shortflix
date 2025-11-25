@@ -35,7 +35,7 @@ export default function VideoPage() {
   const [newComment, setNewComment] = useState('');
   const [userRating, setUserRating] = useState(0);
   const [hasRated, setHasRated] = useState(false);
-  const [autoPlay, setAutoPlay] = useState(true); // Default to true for autoplay experience
+  const [autoPlay] = useState(false); // Default to false for autoplay experience
   const [autoPlayCountdown, setAutoPlayCountdown] = useState<number | null>(null);
   const [nextVideoId, setNextVideoId] = useState<string | null>(null);
 
@@ -91,15 +91,6 @@ export default function VideoPage() {
       }
 
       switch (e.key) {
-        case 'ArrowRight':
-        case ' ':
-          e.preventDefault();
-          goToNextVideo();
-          break;
-        case 'ArrowLeft':
-          e.preventDefault();
-          goToPreviousVideo();
-          break;
         case 'ArrowUp':
           e.preventDefault();
           if (videoRef.current) {
@@ -324,7 +315,7 @@ export default function VideoPage() {
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse">
-            <div className="aspect-[9/16] sm:aspect-video w-full rounded-md bg-gray-800" />
+            <div className="aspect-9/16 sm:aspect-video w-full rounded-md bg-gray-800" />
             <div className="mt-6 h-8 w-3/4 rounded bg-gray-800" />
             <div className="mt-3 h-4 w-1/2 rounded bg-gray-800" />
           </div>
@@ -355,7 +346,7 @@ export default function VideoPage() {
             <div className="lg:col-span-2">
               {/* Custom Video Player */}
               <div 
-                className="relative aspect-[9/16] sm:aspect-video w-full rounded-md overflow-hidden bg-black group"
+                className="relative aspect-9/16 sm:aspect-video w-full rounded-md overflow-hidden bg-black group"
                 onMouseEnter={() => setShowControls(true)}
                 onMouseLeave={() => setShowControls(isPlaying ? false : true)}
               >
@@ -430,14 +421,7 @@ export default function VideoPage() {
                 )}
 
                 {/* Custom Controls */}
-                <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 transition-opacity ${showControls ? 'opacity-100' : 'opacity-0'}`}>
-                  {/* Keyboard Shortcuts Hint */}
-                  <div className="text-center mb-2">
-                    <span className="text-white/60 text-xs">
-                      Use ← → arrow keys to navigate • Space to play/pause
-                    </span>
-                  </div>
-
+                <div className={`absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/90 to-transparent p-4 transition-opacity ${showControls ? 'opacity-100' : 'opacity-0'}`}>
                   {/* Progress Bar */}
                   <input
                     type="range"
@@ -452,14 +436,14 @@ export default function VideoPage() {
                   />
 
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center">
                       {/* Play/Pause */}
                       <button onClick={togglePlay} className="text-white hover:text-[#E50914] transition-colors">
                         {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
                       </button>
 
                       {/* Volume */}
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center">
                         <button 
                           onClick={() => setShowVolumeSlider(!showVolumeSlider)} 
                           className="text-white hover:text-[#E50914] transition-colors"
@@ -478,37 +462,25 @@ export default function VideoPage() {
                       </div>
 
                       {/* Time */}
-                      <span className="text-white text-sm">
+                      <span className="text-white text-sm px-1">
                         {formatDuration(Math.floor(currentTime))} / {formatDuration(Math.floor(duration))}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-between">
                       {/* Previous Video */}
                       <button
                         onClick={goToPreviousVideo}
-                        className="text-white hover:text-[#E50914] transition-colors"
+                        className={`text-white hover:text-[#E50914] transition-colors ${showVolumeSlider ? 'hidden sm:flex' : ''}`}
                         title="Previous video (←)"
                       >
                         <SkipBack className="h-5 w-5" />
                       </button>
 
-                      {/* Auto-play Toggle */}
-                      <button
-                        onClick={() => setAutoPlay(!autoPlay)}
-                        className={`text-white hover:text-[#E50914] transition-colors flex items-center gap-1 ${
-                          autoPlay ? 'text-[#E50914]' : ''
-                        }`}
-                        title={autoPlay ? 'Auto-play is on' : 'Auto-play is off'}
-                      >
-                        <SkipForward className="h-5 w-5" />
-                        <span className="text-sm">Auto</span>
-                      </button>
-
                       {/* Next Video */}
                       <button
                         onClick={goToNextVideo}
-                        className="text-white hover:text-[#E50914] transition-colors"
+                        className={`text-white hover:text-[#E50914] transition-colors ${showVolumeSlider ? 'hidden sm:flex' : ''}`}
                         title="Next video (→)"
                       >
                         <SkipForward className="h-5 w-5" />
@@ -542,8 +514,8 @@ export default function VideoPage() {
                         isLiked ? 'bg-[#E50914] text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                       }`}
                     >
-                      <ThumbsUp className={`h-5 w-5 ${isLiked ? 'fill-white' : ''}`} />
-                      <span className="text-sm font-medium">Like</span>
+                      <ThumbsUp className={`h-4 w-4 sm:h-5 sm:w-5 ${isLiked ? 'fill-white' : ''}`} />
+                      <span className="text-xs sm:text-sm sm:font-medium">Like</span>
                     </button>
 
                     <button
@@ -552,19 +524,19 @@ export default function VideoPage() {
                         isDisliked ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                       }`}
                     >
-                      <ThumbsDown className={`h-5 w-5 ${isDisliked ? 'fill-white' : ''}`} />
+                      <ThumbsDown className={`h-4 w-4 sm:h-5 sm:w-5 ${isDisliked ? 'fill-white' : ''}`} />
                     </button>
 
                     <button
                       onClick={handleShare}
                       className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors"
                     >
-                      <Share2 className="h-5 w-5" />
-                      <span className="text-sm font-medium">Share</span>
+                      <Share2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                      <span className="text-xs sm:text-sm sm:font-medium">Share</span>
                     </button>
 
-                    <button className="p-2 rounded-full bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors">
-                      <Flag className="h-5 w-5" />
+                    <button className="p-2 rounded-full bg-gray-800 px-4 text-gray-300 hover:bg-gray-700 transition-colors">
+                      <Flag className="h-4 w-4 sm:h-5 sm:w-5" />
                     </button>
                   </div>
                 </div>
@@ -588,14 +560,14 @@ export default function VideoPage() {
 
                 {/* Rating Section */}
                 <div className="bg-gray-900 rounded-lg p-4 mb-4">
-                  <h3 className="text-white font-medium mb-2">Rate this video</h3>
-                  <div className="flex items-center gap-2 mb-2">
+                  <h3 className="text-white font-medium">Rate this video</h3>
+                  <div className="flex items-center">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
                         key={star}
                         onClick={() => handleRating(star)}
                         disabled={hasRated}
-                        className={`text-2xl ${hasRated ? 'cursor-default' : 'cursor-pointer hover:scale-110'} transition-transform ${
+                        className={`text-2xl tracking-tighter ${hasRated ? 'cursor-default' : 'cursor-pointer hover:scale-110'} transition-transform ${
                           (hasRated ? userRating : 0) >= star ? 'text-yellow-400' : 'text-gray-600'
                         }`}
                       >
@@ -642,7 +614,7 @@ export default function VideoPage() {
                       comments.map((comment) => (
                         <div key={comment.id} className="border-b border-gray-800 pb-3 last:border-b-0">
                           <div className="flex items-start gap-3">
-                            <div className="w-8 h-8 bg-[#E50914] rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+                            <div className="w-8 h-8 bg-[#E50914] rounded-full flex items-center justify-center text-white text-sm font-semibold shrink-0">
                               {comment.author.charAt(0).toUpperCase()}
                             </div>
                             <div className="flex-1 min-w-0">
@@ -687,7 +659,7 @@ export default function VideoPage() {
                         className="block group cursor-pointer"
                         onClick={() => setAutoPlayCountdown(null)}
                       >
-                        <div className="relative aspect-[9/16] sm:aspect-video rounded-lg overflow-hidden bg-gray-800 mb-3">
+                        <div className="relative aspect-9/16 sm:aspect-video rounded-lg overflow-hidden bg-gray-800 mb-3">
                           <video
                             src={nextVideo.videoUrl}
                             className="w-full h-full object-cover"
@@ -709,7 +681,7 @@ export default function VideoPage() {
                         <h4 className="text-sm font-medium text-white line-clamp-2 group-hover:text-[#E50914] transition-colors">
                           {nextVideo.title}
                         </h4>
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-sm text-gray-400">
                           {formatCount(nextVideo.likes)} views
                         </p>
                       </Link>
@@ -726,7 +698,7 @@ export default function VideoPage() {
                     href={`/shorts/${nextVideo.id}`}
                     className="flex gap-3 group cursor-pointer"
                   >
-                    <div className="relative w-40 aspect-[9/16] sm:aspect-video rounded-md overflow-hidden bg-gray-800 flex-shrink-0">
+                    <div className="relative w-40 aspect-9/16 sm:aspect-video rounded-md overflow-hidden bg-gray-800 shrink-0">
                       <video
                         src={nextVideo.videoUrl}
                         className="w-full h-full object-cover"

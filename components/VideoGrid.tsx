@@ -133,7 +133,7 @@ export default function VideoGrid() {
             <div className="h-10 w-64 animate-pulse rounded bg-gray-800" />
           </div>
           
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
             {Array.from({ length: 16 }).map((_, i) => (
               <div key={i} className="animate-pulse">
                 <div className="aspect-9/16 w-full rounded-sm bg-gray-800" />
@@ -185,7 +185,7 @@ export default function VideoGrid() {
             <p className="text-gray-400">Try adjusting your search or filters</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
             {videos.map((video) => (
               <VideoCard
                 key={video.id}

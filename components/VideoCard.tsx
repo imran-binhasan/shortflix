@@ -22,7 +22,7 @@ export default function VideoCard({ video, onLike, isLiked }: VideoCardProps) {
     <Link href={`/shorts/${video.id}`} className="group">
       <div className="relative">
         {/* Vertical Short Video Thumbnail */}
-        <div className="relative aspect-[9/16] w-full overflow-hidden rounded-lg bg-gradient-to-br from-gray-900 to-black shadow-lg group-hover:shadow-2xl group-hover:shadow-red-900/20 transition-all duration-300">
+        <div className="relative aspect-9/16 w-full overflow-hidden rounded-lg bg-linear-to-br from-gray-900 to-black shadow-lg group-hover:shadow-2xl group-hover:shadow-red-900/20 transition-all duration-300">
           <video
             src={video.videoUrl}
             className="h-full w-full object-cover"
@@ -31,7 +31,7 @@ export default function VideoCard({ video, onLike, isLiked }: VideoCardProps) {
           />
           
           {/* Gradient Overlays */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
+          <div className="absolute inset-0 bg-linear-to-t from-black via-transparent to-transparent opacity-60" />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300" />
           
           {/* Play Button Overlay */}
@@ -61,7 +61,7 @@ export default function VideoCard({ video, onLike, isLiked }: VideoCardProps) {
             
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5 text-xs text-gray-200">
-                <span className="bg-black/50 backdrop-blur-sm px-2 py-0.5 rounded">
+                <span className="bg-black/50 backdrop-blur-sm px-2 py-1 rounded">
                   {video.tags[0]}
                 </span>
               </div>

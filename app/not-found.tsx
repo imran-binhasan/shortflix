@@ -8,7 +8,7 @@ export default function NotFound() {
     <div className="min-h-screen bg-black flex items-center justify-center px-4">
       <div className="text-center">
         <div className="mb-8">
-          <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-[#E50914] to-[#c20913] rounded-full mb-6">
+          <div className="inline-flex items-center justify-center w-24 h-24 bg-linear-to-br from-[#E50914] to-[#c20913] rounded-full mb-6">
             <AlertTriangle className="h-12 w-12 text-white" />
           </div>
           <h1 className="text-6xl font-black text-white mb-4">404</h1>

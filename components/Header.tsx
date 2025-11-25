@@ -44,10 +44,17 @@ export default function Header({ onSearch, searchValue = '', onTrending, isTrend
               <Videotape className="h-9 w-9 text-[#E50914] relative z-10 transform group-hover:scale-110 transition-transform duration-300" />
             </div>
             <div>
-              <h1 className={`text-2xl font-black text-[#E50914] tracking-tight ${isFocused ? 'hidden sm:block' : 'block'}`}>
-                SHORT-FLIX
-              </h1>
-              <p className={`text-[10px] text-gray-500 -mt-1 ${isFocused ? 'hidden sm:block' : 'block'}`}>Shorts Platform</p>
+              <div className={`${isFocused ? 'hidden sm:block' : 'block'}`}>
+                {isMobile ? (
+                  <>
+                    <h1 className="text-lg font-black text-[#E50914] tracking-tighter -mb-1.5">SHORT</h1>
+                    <h1 className="text-lg font-black text-[#E50914] tracking-tighter -mt-1.5">FLIX</h1>
+                  </>
+                ) : (
+                  <h1 className="text-2xl font-black text-[#E50914] tracking-tight">SHORT-FLIX</h1>
+                )}
+              </div>
+              <p className="text-[10px] text-gray-500 -mt-1 hidden sm:block">Shorts Platform</p>
             </div>
           </Link>
 
@@ -63,7 +70,7 @@ export default function Header({ onSearch, searchValue = '', onTrending, isTrend
                   onFocus={() => setIsFocused(true)}
                   onBlur={() => setIsFocused(false)}
                   placeholder="Search videos, tags, creators..."
-                  className="w-full bg-gray-900/80 border-2 border-gray-800 rounded-full pl-12 pr-12 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#E50914] focus:bg-gray-900 transition-all duration-300"
+                  className="w-full bg-gray-900/80 border-2 text-ellipsis border-gray-800 rounded-full pl-12 pr-12 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#E50914] focus:bg-gray-900 transition-all duration-300"
                 />
                 {localSearch && (
                   <button

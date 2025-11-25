@@ -156,24 +156,17 @@ export default function AdminPage() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-black py-12">
-        <div className="container mx-auto px-4 max-w-4xl">
+      <div className="min-h-screen bg-black py-4 sm:py-12">
+        <div className="container mx-auto px-4">
           {/* Header */}
-          <div className="mb-8">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-4 transition-colors"
-            >
-              <X className="h-5 w-5" />
-              <span>Back to Home</span>
-            </Link>
+          <div className="mb-4 sm:mb-8">
             <div className="flex items-center gap-4 mb-2">
               <div className="p-3 bg-linear-to-br from-[#E50914] to-[#c20913] rounded-xl">
                 <UploadCloud className="h-8 w-8 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-semibold text-white">Add New Video</h1>
-                <p className="text-gray-400">Upload a new short video to the platform</p>
+                <h1 className="text-xl sm:text-2xl font-medium text-white">Add New Video</h1>
+                <p className="text-sm sm:text-md text-gray-400">Upload a new short video to the platform</p>
               </div>
             </div>
           </div>
@@ -196,11 +189,20 @@ export default function AdminPage() {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Video URL */}
-            <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-6">
-              <label className="block text-sm font-semibold text-white mb-2">
-                Video URL *
-              </label>
+            {/* Video URL Section */}
+            <div className="bg-linear-to-br from-gray-900/80 to-gray-900/40 border border-gray-800 rounded-2xl p-6 sm:p-8 shadow-xl">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="p-2 bg-[#E50914]/10 rounded-lg mt-1">
+                  <UploadCloud className="h-5 w-5 text-[#E50914]" />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-base font-semibold text-white mb-1">
+                    Video URL *
+                  </label>
+                  <p className="text-xs text-gray-400">Enter a direct link to an MP4 video file</p>
+                </div>
+              </div>
+
               <div className="relative">
                 <input
                   type="url"
@@ -209,131 +211,134 @@ export default function AdminPage() {
                   onChange={handleVideoUrlChange}
                   required
                   placeholder="https://example.com/video.mp4"
-                  className={`w-full bg-gray-900 border rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none transition-colors pr-12 ${
-                    videoValid === true ? 'border-green-500 focus:border-green-500' : 
-                    videoValid === false ? 'border-red-500 focus:border-red-500' : 
-                    'border-gray-700 focus:border-[#E50914]'
+                  className={`w-full bg-gray-950/50 border-2 rounded-xl px-4 py-3.5 text-white placeholder-gray-500 focus:outline-none transition-all pr-12 ${
+                    videoValid === true ? 'border-green-500/50 focus:border-green-500 bg-green-500/5' : 
+                    videoValid === false ? 'border-red-500/50 focus:border-red-500 bg-red-500/5' : 
+                    'border-gray-700/50 focus:border-[#E50914]/50'
                   }`}
                 />
                 {validatingVideo && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
                     <div className="h-5 w-5 border-2 border-gray-400 border-t-[#E50914] rounded-full animate-spin" />
                   </div>
                 )}
                 {!validatingVideo && videoValid !== null && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
                     {videoValid ? (
-                      <Check className="h-5 w-5 text-green-500" />
+                      <div className="bg-green-500/20 rounded-full p-1">
+                        <Check className="h-4 w-4 text-green-500" />
+                      </div>
                     ) : (
-                      <X className="h-5 w-5 text-red-500" />
+                      <div className="bg-red-500/20 rounded-full p-1">
+                        <X className="h-4 w-4 text-red-500" />
+                      </div>
                     )}
                   </div>
                 )}
               </div>
-              <p className="mt-2 text-xs text-gray-500">Enter a direct link to an MP4 video file</p>
               
               {/* Validation Message */}
               {videoValid === false && (
-                <p className="mt-2 text-xs text-red-400 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  Invalid video URL. Please check the link and try again.
-                </p>
+                <div className="mt-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                  <p className="text-xs text-red-400 flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    Invalid video URL. Please check the link and try again.
+                  </p>
+                </div>
               )}
-              {videoValid === true && (
-                <p className="mt-2 text-xs text-green-400 flex items-center gap-1">
-                  <Check className="h-3 w-3" />
-                  Video URL is valid and accessible.
-                </p>
+              {videoValid === true && detectedDuration !== null && (
+                <div className="mt-3 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-green-400 flex items-center gap-2">
+                      <Check className="h-4 w-4 shrink-0" />
+                      Video validated successfully
+                    </p>
+                    <div className="flex items-center gap-2 bg-gray-900/50 px-3 py-1 rounded-full">
+                      <span className="text-sm font-medium text-white">{formatDuration(detectedDuration)}</span>
+                      <span className="text-xs text-gray-400">({detectedDuration}s)</span>
+                    </div>
+                  </div>
+                </div>
               )}
               
               {/* Sample Videos */}
-              <div className="mt-4">
-                <p className="text-xs font-semibold text-gray-400 mb-2">Sample video URLs:</p>
-                <div className="space-y-1">
-                  {sampleVideos.map((url, index) => (
+              <div className="mt-4 pt-4 border-t border-gray-800/50">
+                <p className="text-xs font-semibold text-gray-400 mb-3">Quick test with sample videos:</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {sampleVideos.slice(0, 6).map((url, index) => (
                     <button
                       key={index}
                       type="button"
                       onClick={() => {
                         setFormData({ ...formData, videoUrl: url });
-                        setVideoValid(null); // Reset validation when using sample
-                        setDetectedDuration(null); // Reset detected duration
+                        handleVideoUrlChange({ target: { value: url } } as any);
                       }}
-                      className="block w-full text-left px-3 py-2 bg-gray-800/50 hover:bg-gray-800 rounded text-xs text-gray-400 hover:text-[#E50914] transition-colors"
+                      className="text-left px-3 py-2.5 bg-gray-800/30 hover:bg-gray-800/60 border border-gray-700/50 hover:border-[#E50914]/50 rounded-lg text-xs text-gray-400 hover:text-white transition-all group"
                     >
-                      {url}
+                      <span className="group-hover:text-[#E50914] transition-colors">Sample {index + 1}</span>
+                      <span className="block text-[10px] text-gray-600 mt-0.5 truncate">{url.split('/').pop()}</span>
                     </button>
                   ))}
                 </div>
               </div>
             </div>
 
-            {/* Duration Display */}
-            {detectedDuration !== null && (
-              <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-4">
-                <label className="block text-sm font-semibold text-white mb-2">
-                  Detected Duration
+            {/* Title and Tags Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Title */}
+              <div className="bg-linear-to-br from-gray-900/80 to-gray-900/40 border border-gray-800 rounded-2xl p-6 shadow-xl">
+                <label className="block text-sm font-semibold text-white mb-3">
+                  Video Title *
                 </label>
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-300">{formatDuration(detectedDuration)}</span>
-                  <span className="text-xs text-gray-500">({detectedDuration} seconds)</span>
-                </div>
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  required
+                  placeholder="Enter an engaging title"
+                  className="w-full bg-gray-950/50 border-2 border-gray-700/50 focus:border-[#E50914]/50 rounded-xl px-4 py-3.5 text-white placeholder-gray-500 focus:outline-none transition-all"
+                />
               </div>
-            )}
 
-            {/* Title */}
-            <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-6">
-              <label className="block text-sm font-semibold text-white mb-2">
-                Video Title *
-              </label>
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                required
-                placeholder="Enter video title"
-                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#E50914] transition-colors"
-              />
+              {/* Tags */}
+              <div className="bg-linear-to-br from-gray-900/80 to-gray-900/40 border border-gray-800 rounded-2xl p-6 shadow-xl">
+                <label className="block text-sm font-semibold text-white mb-3">
+                  Tags *
+                </label>
+                <input
+                  type="text"
+                  name="tags"
+                  value={formData.tags}
+                  onChange={handleChange}
+                  required
+                  placeholder="animation, nature, adventure"
+                  className="w-full bg-gray-950/50 border-2 border-gray-700/50 focus:border-[#E50914]/50 rounded-xl px-4 py-3.5 text-white placeholder-gray-500 focus:outline-none transition-all"
+                />
+                <p className="mt-2 text-xs text-gray-500">Separate tags with commas</p>
+              </div>
             </div>
 
             {/* Description */}
-            <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-6">
-              <label className="block text-sm font-semibold text-white mb-2">
+            <div className="bg-linear-to-br from-gray-900/80 to-gray-900/40 border border-gray-800 rounded-2xl p-6 shadow-xl">
+              <label className="block text-sm font-semibold text-white mb-3">
                 Description
               </label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                rows={4}
-                placeholder="Enter video description"
-                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#E50914] transition-colors resize-none"
+                rows={5}
+                placeholder="Describe your video content..."
+                className="w-full bg-gray-950/50 border-2 border-gray-700/50 focus:border-[#E50914]/50 rounded-xl px-4 py-3.5 text-white placeholder-gray-500 focus:outline-none transition-all resize-none"
               />
-            </div>
-
-            {/* Tags */}
-            <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-6">
-              <label className="block text-sm font-semibold text-white mb-2">
-                Tags *
-              </label>
-              <input
-                type="text"
-                name="tags"
-                value={formData.tags}
-                onChange={handleChange}
-                required
-                placeholder="animation, nature, adventure"
-                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#E50914] transition-colors"
-              />
-              <p className="mt-2 text-xs text-gray-500">Separate tags with commas</p>
             </div>
 
             {/* Submit Button */}
             <button
               type="submit"
               disabled={loading || videoValid !== true}
-              className="w-full bg-linear-to-r from-[#E50914] to-[#c20913] hover:from-[#c20913] hover:to-[#a00812] text-white font-medium py-4 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg shadow-red-900/50"
+              className="w-full bg-linear-to-r from-[#E50914] to-[#c20913] hover:from-[#c20913] hover:to-[#a00812] text-white font-semibold py-4 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg shadow-red-900/30 hover:shadow-red-900/50 hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100"
             >
               {loading ? (
                 <>

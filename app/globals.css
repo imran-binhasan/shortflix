@@ -1,15 +1,20 @@
 @import "tailwindcss";
 
 ::-webkit-scrollbar {
-  @apply w-2;
+  width: 0.5rem;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-950;
+  background-color: rgb(3 7 18);
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-[#E50914] rounded-full hover:bg-[#c20913];
+  background-color: #E50914;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #c20913;
 }
 
 * {
@@ -37,4 +42,38 @@
 
 .animate-float {
   animation: float 3s ease-in-out infinite;
+}
+
+/* Enhanced mobile video player controls */
+@media (max-width: 640px) {
+  .video-controls {
+    padding: 0.75rem;
+  }
+  
+  .video-controls button {
+    padding: 0.5rem;
+  }
+  
+  .video-controls input[type="range"] {
+    height: 0.25rem;
+  }
+}
+
+
+
+/* Optimize grid spacing for smaller screens */
+.video-grid {
+  gap: clamp(0.5rem, 2vw, 1rem);
+}
+
+/* Ensure video cards maintain aspect ratio */
+.video-card-container {
+  aspect-ratio: 9/16;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .video-card-container {
+    aspect-ratio: auto;
+  }
 }
