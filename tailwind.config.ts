@@ -6,18 +6,13 @@ const config: Config = {
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  darkMode: 'class',
   theme: {
     extend: {
-      colors: {
-        'netflix-red': '#E50914',
-        'netflix-black': '#141414',
-        'netflix-dark-gray': '#1a1a1a',
-      },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-in-out',
         'scale-in': 'scaleIn 0.2s ease-in-out',
         'slide-up': 'slideUp 0.3s ease-out',
-        shimmer: 'shimmer 2s infinite',
       },
       keyframes: {
         fadeIn: {
@@ -31,10 +26,6 @@ const config: Config = {
         slideUp: {
           '0%': { transform: 'translateY(10px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
-        },
-        shimmer: {
-          '0%': { backgroundPosition: '-1000px 0' },
-          '100%': { backgroundPosition: '1000px 0' },
         },
       },
     },
