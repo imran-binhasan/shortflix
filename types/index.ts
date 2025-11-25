@@ -4,38 +4,18 @@ export interface ShortVideo {
   title: string;
   description: string;
   tags: string[];
-  duration: number; // in seconds
+  duration: number;
   likes: number;
+  quality?: string; // e.g., '1080p', '720p', etc.
+  comments?: Comment[];
+  rating?: number; // Average rating 1-5
+  totalRatings?: number;
 }
 
-export interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  error?: string;
-}
-
-export interface VideoPlayerProps {
-  video: ShortVideo | null;
-  isOpen: boolean;
-  onClose: () => void;
-  onLike: (id: string) => void;
-  isLiked: boolean;
-}
-
-export interface VideoCardProps {
-  video: ShortVideo;
-  onClick: () => void;
-  onLike: (id: string) => void;
-  isLiked: boolean;
-}
-
-export interface SearchBarProps {
-  value: string;
-  onChange: (value: string) => void;
-}
-
-export interface TagFilterProps {
-  tags: string[];
-  selectedTag: string | null;
-  onTagSelect: (tag: string | null) => void;
+export interface Comment {
+  id: string;
+  author: string;
+  text: string;
+  timestamp: number;
+  likes: number;
 }
