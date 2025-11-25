@@ -435,15 +435,15 @@ export default function VideoPage() {
                     }}
                   />
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
+                  <div className="flex items-center justify-between ">
+                    <div className="flex items-center gap-2 sm:gap-3">
                       {/* Play/Pause */}
                       <button onClick={togglePlay} className="text-white hover:text-[#E50914] transition-colors">
                         {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
                       </button>
 
                       {/* Volume */}
-                      <div className="flex items-center">
+                      <div className="flex items-center gap-1">
                         <button 
                           onClick={() => setShowVolumeSlider(!showVolumeSlider)} 
                           className="text-white hover:text-[#E50914] transition-colors"
@@ -467,7 +467,7 @@ export default function VideoPage() {
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2 sm:gap-3">
                       {/* Previous Video */}
                       <button
                         onClick={goToPreviousVideo}
