@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { formatDuration } from '@/lib/utils';
-import { Upload, Plus, X, Check, AlertCircle, CheckCircle, UploadCloud } from 'lucide-react';
+import { Plus, X, Check, AlertCircle, CheckCircle, UploadCloud } from 'lucide-react';
 import Header from '@/components/Header';
 import Link from 'next/link';
 
@@ -168,7 +168,7 @@ export default function AdminPage() {
               <span>Back to Home</span>
             </Link>
             <div className="flex items-center gap-4 mb-2">
-              <div className="p-3 bg-gradient-to-br from-[#E50914] to-[#c20913] rounded-xl">
+              <div className="p-3 bg-linear-to-br from-[#E50914] to-[#c20913] rounded-xl">
                 <UploadCloud className="h-8 w-8 text-white" />
               </div>
               <div>

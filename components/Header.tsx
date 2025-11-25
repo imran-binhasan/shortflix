@@ -1,6 +1,6 @@
 'use client';
 
-import { Videotape, Search, X, TrendingUp, Plus, BatteryPlus, Upload } from 'lucide-react';
+import { Videotape, Search, X, TrendingUp, Upload } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 

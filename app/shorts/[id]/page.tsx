@@ -718,11 +718,9 @@ export default function VideoPage() {
                 </div>
               )}
 
-              <h2 className="text-xl font-semibold text-white mb-4">More Videos</h2>
+              <h2 className="text-xl font-semibold text-white mb-4">Related Videos</h2>
               <div className="space-y-3">
-                {allVideos.slice(currentVideoIndex + 1, currentVideoIndex + 6).concat(
-                  allVideos.slice(0, Math.max(0, 5 - (allVideos.length - currentVideoIndex - 1)))
-                ).map((nextVideo) => (
+                {relatedVideos.slice(0, 5).map((nextVideo) => (
                   <Link
                     key={nextVideo.id}
                     href={`/shorts/${nextVideo.id}`}
