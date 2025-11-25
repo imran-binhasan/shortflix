@@ -1,7 +1,7 @@
 'use client';
 
-import { Videotape, Search, X, TrendingUp, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { Videotape, Search, X, TrendingUp, Plus, BatteryPlus, Upload } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 interface HeaderProps {
@@ -14,6 +14,14 @@ interface HeaderProps {
 export default function Header({ onSearch, searchValue = '', onTrending, isTrending = false }: HeaderProps) {
   const [localSearch, setLocalSearch] = useState(searchValue);
   const [isFocused, setIsFocused] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleSearchChange = (value: string) => {
     setLocalSearch(value);
@@ -28,7 +36,7 @@ export default function Header({ onSearch, searchValue = '', onTrending, isTrend
   return (
     <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-xl border-b border-gray-800/50 shadow-2xl">
       <div className="container mx-auto px-4 py-3.5">
-        <div className="flex items-center justify-between gap-6">
+        <div className="flex items-center justify-between gap-3 sm:gap-6 transition-all duration-300">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 shrink-0 group">
             <div className="relative">
@@ -36,17 +44,17 @@ export default function Header({ onSearch, searchValue = '', onTrending, isTrend
               <Videotape className="h-9 w-9 text-[#E50914] relative z-10 transform group-hover:scale-110 transition-transform duration-300" />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-[#E50914] tracking-tight">
+              <h1 className={`text-2xl font-black text-[#E50914] tracking-tight ${isFocused ? 'hidden sm:block' : 'block'}`}>
                 SHORT-FLIX
               </h1>
-              <p className="text-[10px] text-gray-500 -mt-1">Shorts Platform</p>
+              <p className={`text-[10px] text-gray-500 -mt-1 ${isFocused ? 'hidden sm:block' : 'block'}`}>Shorts Platform</p>
             </div>
           </Link>
 
           {/* Search Bar */}
           {onSearch && (
-            <div className="relative max-w-2xl w-full">
-              <div className={`relative transition-all duration-300 ${isFocused ? 'scale-105' : ''}`}>
+            <div className={`relative max-w-2xl flex-1 min-w-0 ${isFocused && isMobile ? 'max-w-none' : ''}`}>
+              <div className={`relative transition-all duration-300 ${isFocused ? 'scale-100' : ''}`}>
                 <Search className={`absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 transition-colors ${isFocused ? 'text-[#E50914]' : 'text-gray-500'}`} />
                 <input
                   type="text"
@@ -70,13 +78,13 @@ export default function Header({ onSearch, searchValue = '', onTrending, isTrend
           )}
 
           {/* Right Side Buttons */}
-          <div className="flex items-center gap-3">
+          <div className={`flex items-center gap-2 ${isFocused && isMobile ? 'hidden sm:flex' : 'flex'}`}>
             {/* Add Video Button */}
             <Link
               href="/admin"
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#E50914] to-[#c20913] rounded-full hover:shadow-lg hover:shadow-red-900/50 transition-all duration-300 group"
+              className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-[#E50914] to-[#c20913] rounded-full hover:shadow-lg hover:shadow-red-900/50 transition-all duration-300 group"
             >
-              <Plus className="h-5 w-5 text-white group-hover:rotate-90 transition-transform duration-300" />
+              <Upload className="h-6 sm:h-5 w-5 text-white group-hover:rotate-90 transition-transform duration-300" />
               <span className="text-sm font-semibold text-white hidden sm:inline">Add Video</span>
             </Link>
 
@@ -86,8 +94,8 @@ export default function Header({ onSearch, searchValue = '', onTrending, isTrend
                 onClick={onTrending}
                 className={`hidden md:flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 group ${
                   isTrending
-                    ? 'bg-gradient-to-r from-[#E50914] to-[#c20913] text-white shadow-lg shadow-red-900/50'
-                    : 'bg-gradient-to-r from-[#E50914]/20 to-orange-600/20 border border-[#E50914]/30 text-[#E50914] hover:shadow-lg hover:shadow-red-900/50'
+                    ? 'bg-linear-to-r from-[#E50914] to-[#c20913] text-white shadow-lg shadow-red-900/50'
+                    : 'bg-linear-to-r from-[#E50914]/20 to-orange-600/20 border border-[#E50914]/30 text-[#E50914] hover:shadow-lg hover:shadow-red-900/50'
                 }`}
               >
                 <TrendingUp className={`h-4 w-4 group-hover:scale-110 transition-transform ${isTrending ? 'text-white' : 'text-[#E50914]'}`} />

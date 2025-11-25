@@ -51,14 +51,14 @@ export default function TagFilter({ tags, selectedTag, onTagSelect }: TagFilterP
       {/* Tags Container */}
       <div
         ref={scrollRef}
-        className="flex items-center gap-3 overflow-x-auto scrollbar-hide px-8"
+        className="flex items-center gap-3 overflow-x-auto scrollbar-hide px-1.5"
         onScroll={checkScrollButtons}
       >
         <button
           onClick={() => onTagSelect(null)}
-          className={`flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-full transition-all duration-300 whitespace-nowrap flex-shrink-0 ${
+          className={`flex items-center gap-2 px-3 py-2 text-xs sm:px-5 sm:py-2.5 sm:text-sm font-semibold rounded-full transition-all duration-300 whitespace-nowrap shrink-0 ${
             selectedTag === null
-              ? 'bg-gradient-to-r from-[#E50914] to-[#c20913] text-white shadow-lg shadow-red-900/50 scale-105'
+              ? 'bg-linear-to-r from-[#E50914] to-[#c20913] text-white shadow-lg shadow-red-900/50 scale-105'
               : 'bg-gray-800/80 text-gray-300 hover:bg-gray-700 hover:scale-105'
           }`}
         >
@@ -70,9 +70,9 @@ export default function TagFilter({ tags, selectedTag, onTagSelect }: TagFilterP
           <button
             key={tag}
             onClick={() => onTagSelect(tag)}
-            className={`px-5 py-2.5 text-sm font-semibold rounded-full transition-all duration-300 whitespace-nowrap flex-shrink-0 ${
+            className={`px-3 py-2 text-xs sm:px-5 sm:py-2.5 sm:text-sm font-semibold rounded-full transition-all duration-300 whitespace-nowrap shrink-0 ${
               selectedTag === tag
-                ? 'bg-gradient-to-r from-[#E50914] to-[#c20913] text-white shadow-lg shadow-red-900/50 scale-105'
+                ? 'bg-linear-to-r from-[#E50914] to-[#c20913] text-white shadow-lg shadow-red-900/50 scale-105'
                 : 'bg-gray-800/80 text-gray-300 hover:bg-gray-700 hover:scale-105'
             }`}
           >

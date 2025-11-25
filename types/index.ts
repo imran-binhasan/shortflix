@@ -6,9 +6,9 @@ export interface ShortVideo {
   tags: string[];
   duration: number;
   likes: number;
-  quality?: string; // e.g., '1080p', '720p', etc.
+  quality?: string; 
   comments?: Comment[];
-  rating?: number; // Average rating 1-5
+  rating?: number;
   totalRatings?: number;
 }
 

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { formatDuration } from '@/lib/utils';
-import { Upload, Plus, X, Check, AlertCircle, CheckCircle } from 'lucide-react';
+import { Upload, Plus, X, Check, AlertCircle, CheckCircle, UploadCloud } from 'lucide-react';
 import Header from '@/components/Header';
 import Link from 'next/link';
 
@@ -169,7 +169,7 @@ export default function AdminPage() {
             </Link>
             <div className="flex items-center gap-4 mb-2">
               <div className="p-3 bg-gradient-to-br from-[#E50914] to-[#c20913] rounded-xl">
-                <Upload className="h-8 w-8 text-white" />
+                <UploadCloud className="h-8 w-8 text-white" />
               </div>
               <div>
                 <h1 className="text-3xl font-semibold text-white">Add New Video</h1>

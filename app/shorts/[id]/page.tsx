@@ -324,7 +324,7 @@ export default function VideoPage() {
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse">
-            <div className="aspect-video w-full rounded-md bg-gray-800" />
+            <div className="aspect-[9/16] sm:aspect-video w-full rounded-md bg-gray-800" />
             <div className="mt-6 h-8 w-3/4 rounded bg-gray-800" />
             <div className="mt-3 h-4 w-1/2 rounded bg-gray-800" />
           </div>
@@ -355,7 +355,7 @@ export default function VideoPage() {
             <div className="lg:col-span-2">
               {/* Custom Video Player */}
               <div 
-                className="relative aspect-video w-full rounded-md overflow-hidden bg-black group"
+                className="relative aspect-[9/16] sm:aspect-video w-full rounded-md overflow-hidden bg-black group"
                 onMouseEnter={() => setShowControls(true)}
                 onMouseLeave={() => setShowControls(isPlaying ? false : true)}
               >
@@ -367,6 +367,8 @@ export default function VideoPage() {
                   onTimeUpdate={handleTimeUpdate}
                   onLoadedMetadata={handleLoadedMetadata}
                   onLoadedData={() => setVideoLoading(false)}
+                  onPlay={() => setIsPlaying(true)}
+                  onPause={() => setIsPlaying(false)}
                   onEnded={() => {
                     setIsPlaying(false);
                     if (autoPlay && allVideos.length > 1) {
@@ -685,7 +687,7 @@ export default function VideoPage() {
                         className="block group cursor-pointer"
                         onClick={() => setAutoPlayCountdown(null)}
                       >
-                        <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-800 mb-3">
+                        <div className="relative aspect-[9/16] sm:aspect-video rounded-lg overflow-hidden bg-gray-800 mb-3">
                           <video
                             src={nextVideo.videoUrl}
                             className="w-full h-full object-cover"
@@ -726,7 +728,7 @@ export default function VideoPage() {
                     href={`/shorts/${nextVideo.id}`}
                     className="flex gap-3 group cursor-pointer"
                   >
-                    <div className="relative w-40 aspect-video rounded-md overflow-hidden bg-gray-800 flex-shrink-0">
+                    <div className="relative w-40 aspect-[9/16] sm:aspect-video rounded-md overflow-hidden bg-gray-800 flex-shrink-0">
                       <video
                         src={nextVideo.videoUrl}
                         className="w-full h-full object-cover"
