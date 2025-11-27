@@ -1,3 +1,4 @@
+// lib/store.ts
 'use client';
 
 import { create } from 'zustand';
@@ -63,7 +64,8 @@ export const useVideoStore = create<VideoStore>((set) => ({
 
   // API actions
   updateVideoLike: async (id, action) => {
-    const res = await fetch('/api/shorts', {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+    const res = await fetch(`${baseUrl}/api/shorts`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, action }),
@@ -77,7 +79,8 @@ export const useVideoStore = create<VideoStore>((set) => ({
   },
 
   updateVideoRating: async (id, rating) => {
-    const res = await fetch('/api/shorts', {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+    const res = await fetch(`${baseUrl}/api/shorts`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, action: 'rate', rating }),
@@ -91,7 +94,8 @@ export const useVideoStore = create<VideoStore>((set) => ({
   },
 
   updateVideoComment: async (id, comment) => {
-    const res = await fetch('/api/shorts', {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+    const res = await fetch(`${baseUrl}/api/shorts`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, action: 'comment', comment }),
@@ -105,7 +109,8 @@ export const useVideoStore = create<VideoStore>((set) => ({
   },
 
   updateVideoDuration: async (id, duration) => {
-    const res = await fetch('/api/shorts', {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+    const res = await fetch(`${baseUrl}/api/shorts`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, action: 'updateDuration', duration }),
@@ -122,7 +127,8 @@ export const useVideoStore = create<VideoStore>((set) => ({
   fetchVideos: async () => {
     set({ isLoading: true, error: null });
     try {
-      const res = await fetch('/api/shorts');
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const res = await fetch(`${baseUrl}/api/shorts`);
       if (!res.ok) throw new Error('Failed to fetch videos');
       const data: ShortVideo[] = await res.json();
       set({ videos: data, isLoading: false });
