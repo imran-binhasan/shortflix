@@ -1,21 +1,17 @@
+// components/VideoGrid.tsx
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import TagFilter from './TagFilter';
 import VideoCard from './VideoCard';
 import { useVideoStore } from '@/lib/store';
-import { ShortVideo } from '@/lib/schemas';
 
-interface VideoGridClientProps {
-  initialVideos: ShortVideo[];
-}
-
-export default function VideoGridClient({ initialVideos }: VideoGridClientProps) {
+export default function VideoGridClient() {
   const {
     videos,
     isLoading,
     error,
-    setVideos,
+    fetchVideos,
     searchQuery,
     selectedTag,
     setSelectedTag,
@@ -25,13 +21,10 @@ export default function VideoGridClient({ initialVideos }: VideoGridClientProps)
 
   const [likedVideos, setLikedVideos] = useState<Set<string>>(new Set());
 
-
+  // Fetch videos on mount
   useEffect(() => {
-    if (initialVideos.length > 0 && videos.length === 0) {
-      setVideos(initialVideos);
-    }
-  }, [initialVideos, videos.length, setVideos]);
-
+    fetchVideos();
+  }, [fetchVideos]);
 
   const filteredVideos = useMemo(() => {
     let filtered = [...videos];
