@@ -15,6 +15,7 @@ This project is a mini Short-Flix platform built using Next.js and TypeScript wi
 **Frontend:**
 - Next.js 16 (App Router)
 - React 19
+- Zustand & Zod
 - TypeScript
 - Tailwind CSS 4
 - Lucide React (icons)

@@ -1,5 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { shortsData } from '@/lib/data';
+import {
+  shortVideoSchema,
+  videoInputSchema,
+  patchSchema,
+  ShortVideo,
+} from '@/lib/schemas';
+import { z } from 'zod';
+
+// helper: validate entire array before returning
+function validateVideosArray(items: unknown) {
+  const arrSchema = z.array(shortVideoSchema);
+  return arrSchema.parse(items);
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,7 +26,7 @@ export async function GET(request: NextRequest) {
       filteredVideos = filteredVideos.filter(
         (video) =>
           video.title.toLowerCase().includes(searchQuery) ||
-          video.description.toLowerCase().includes(searchQuery)
+          (video.description || '').toLowerCase().includes(searchQuery)
       );
     }
 
@@ -23,89 +36,118 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(filteredVideos);
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to fetch videos' },
-      { status: 500 }
-    );
+    // Validate output (throws ZodError if invalid)
+    const validated = validateVideosArray(filteredVideos);
+
+    return NextResponse.json(validated);
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      return NextResponse.json({ error: 'Data validation error', details: err.flatten() }, { status: 500 });
+    }
+    return NextResponse.json({ error: 'Failed to fetch videos' }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    
-    if (!body.title || !body.videoUrl || !body.tags) {
-      return NextResponse.json(
-        { error: 'Missing required fields: title, videoUrl, tags' },
-        { status: 400 }
-      );
+    const raw = await request.json();
+    const parseResult = videoInputSchema.safeParse(raw);
+
+    if (!parseResult.success) {
+      return NextResponse.json({ error: 'Invalid input', details: parseResult.error.flatten() }, { status: 400 });
     }
 
-    const newVideo = {
+    const data = parseResult.data;
+
+    // Build full object and let shortVideoSchema apply defaults / validation
+    const toParse: Partial<ShortVideo> = {
       id: (shortsData.length + 1).toString(),
-      videoUrl: body.videoUrl,
-      title: body.title,
-      description: body.description || '',
-      tags: Array.isArray(body.tags) ? body.tags : [body.tags],
-      duration: 0, // Will be detected dynamically when video loads
+      videoUrl: data.videoUrl,
+      title: data.title,
+      description: data.description ?? '',
+      tags: Array.isArray(data.tags) ? data.tags : [String(data.tags)],
+      duration: data.duration ?? 0,
       likes: 0,
-      quality: 'Auto', // Will be detected or set based on video properties
+      quality: 'Auto',
       comments: [],
       rating: 0,
       totalRatings: 0,
     };
 
+    const newVideo = shortVideoSchema.parse(toParse);
     shortsData.push(newVideo);
 
     return NextResponse.json(newVideo, { status: 201 });
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to add video' },
-      { status: 500 }
-    );
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      return NextResponse.json({ error: 'Validation error', details: err.flatten() }, { status: 400 });
+    }
+    return NextResponse.json({ error: 'Failed to add video' }, { status: 500 });
   }
 }
 
-// Handle likes
 export async function PATCH(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { id, action, comment, rating, duration } = body;
+    const raw = await request.json();
+    const parseResult = patchSchema.safeParse(raw);
 
-    const video = shortsData.find(v => v.id === id);
-    if (!video) {
+    if (!parseResult.success) {
+      return NextResponse.json({ error: 'Invalid patch payload', details: parseResult.error.flatten() }, { status: 400 });
+    }
+
+    const body = parseResult.data;
+
+    const idx = shortsData.findIndex((v) => v.id === body.id);
+    if (idx === -1) {
       return NextResponse.json({ error: 'Video not found' }, { status: 404 });
     }
 
-    if (action === 'like') {
-      video.likes += 1;
-    } else if (action === 'unlike') {
-      video.likes = Math.max(0, video.likes - 1);
-    } else if (action === 'comment' && comment) {
-      const newComment = {
-        id: Date.now().toString(),
-        author: comment.author || 'Anonymous',
-        text: comment.text,
-        timestamp: Date.now(),
-        likes: 0,
-      };
-      video.comments = video.comments || [];
-      video.comments.push(newComment);
-    } else if (action === 'rate' && rating) {
-      video.totalRatings = (video.totalRatings || 0) + 1;
-      const currentRating = video.rating || 0;
-      video.rating = ((currentRating * (video.totalRatings - 1)) + rating) / video.totalRatings;
-    } else if (action === 'updateDuration' && duration !== undefined) {
-      video.duration = duration;
+    const video = shortsData[idx];
+
+    switch (body.action) {
+      case 'like':
+        video.likes = (video.likes || 0) + 1;
+        break;
+      case 'unlike':
+        video.likes = Math.max(0, (video.likes || 0) - 1);
+        break;
+      case 'comment': {
+        const newComment = {
+          id: Date.now().toString(),
+          author: body.comment.author ?? 'Anonymous',
+          text: body.comment.text,
+          timestamp: Date.now(),
+          likes: 0,
+        };
+        video.comments = video.comments || [];
+        video.comments.push(newComment);
+        break;
+      }
+      case 'rate': {
+        const currentRating = video.rating ?? 0;
+        const currentTotal = video.totalRatings ?? 0;
+        const newTotal = currentTotal + 1;
+        const newRating = ((currentRating * currentTotal) + body.rating) / newTotal;
+        video.rating = Number(newRating.toFixed(2));
+        video.totalRatings = newTotal;
+        break;
+      }
+      case 'updateDuration':
+        video.duration = body.duration;
+        break;
+      default:
+        return NextResponse.json({ error: 'Unsupported action' }, { status: 400 });
     }
 
-    return NextResponse.json(video);
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to update video' },
-      { status: 500 }
-    );
+    // validate mutated item before returning
+    const validated = shortVideoSchema.parse(video);
+    shortsData[idx] = validated;
+
+    return NextResponse.json(validated);
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      return NextResponse.json({ error: 'Validation error', details: err.flatten() }, { status: 400 });
+    }
+    return NextResponse.json({ error: 'Failed to update video' }, { status: 500 });
   }
 }

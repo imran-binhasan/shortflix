@@ -1,4 +1,4 @@
-import { ShortVideo } from '@/types';
+import { ShortVideo } from './schemas';
 
 export const shortsData: ShortVideo[] = [
   {
@@ -7,7 +7,7 @@ export const shortsData: ShortVideo[] = [
     title: 'Big Buck Bunny',
     description: 'A delightful animated adventure featuring a large rabbit dealing with mischievous flying creatures in a vibrant forest setting.',
     tags: ['animation', 'nature', 'adventure', 'animals'],
-    duration: 30, // Will be updated dynamically
+    duration: 30,
     likes: 1247000,
     quality: '480p',
     comments: [

@@ -5,84 +5,139 @@ import { formatDuration } from '@/lib/utils';
 import { Plus, X, Check, AlertCircle, CheckCircle, UploadCloud } from 'lucide-react';
 import Header from '@/components/Header';
 import Link from 'next/link';
+import { videoInputSchema, type VideoInput } from '@/lib/schemas';
+import { useVideoStore } from '@/lib/store';
+import { z } from 'zod';
 
 export default function AdminPage() {
-  const [formData, setFormData] = useState({
+  const addVideo = useVideoStore((state) => state.addVideo);
+  
+  const [formData, setFormData] = useState<VideoInput>({
     title: '',
     videoUrl: '',
     description: '',
-    tags: '',
+    tags: [],
+    duration: 0,
   });
+  const [tagsInput, setTagsInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [validatingVideo, setValidatingVideo] = useState(false);
   const [videoValid, setVideoValid] = useState<boolean | null>(null);
   const [detectedDuration, setDetectedDuration] = useState<number | null>(null);
 
+  const validateForm = (): boolean => {
+    try {
+      videoInputSchema.parse(formData);
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        error.issues.forEach((issue) => {
+          if (issue.path[0]) {
+            newErrors[issue.path[0].toString()] = issue.message;
+          }
+        });
+        setErrors(newErrors);
+      }
+      return false;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Check if video URL is valid
     if (videoValid !== true) {
-      setError('Please enter a valid video URL before submitting.');
+      setErrors({ videoUrl: 'Please enter a valid video URL before submitting.' });
+      return;
+    }
+
+    if (!validateForm()) {
       return;
     }
     
     setLoading(true);
-    setError('');
-    setSuccess(false);
 
     try {
-      const tagsArray = formData.tags.split(',').map(tag => tag.trim()).filter(Boolean);
-      
       const response = await fetch('/api/shorts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          title: formData.title,
-          videoUrl: formData.videoUrl,
-          description: formData.description,
-          tags: tagsArray,
-          duration: detectedDuration || 0, // Use detected duration or 0 as fallback
-        }),
+        body: JSON.stringify(formData),
       });
 
       const data = await response.json();
 
       if (response.ok) {
+        // Add to Zustand store
+        addVideo(data);
+        
         setSuccess(true);
         setShowSuccessModal(true);
         setFormData({
           title: '',
           videoUrl: '',
           description: '',
-          tags: '',
+          tags: [],
+          duration: 0,
         });
-        setVideoValid(null); // Reset validation state
-        setDetectedDuration(null); // Reset detected duration
+        setTagsInput('');
+        setVideoValid(null);
+        setDetectedDuration(null);
+        setErrors({});
+        
         setTimeout(() => {
           setSuccess(false);
           setShowSuccessModal(false);
         }, 3000);
       } else {
-        setError(data.error || 'Failed to add video');
+        setErrors({ submit: data.error || 'Failed to add video' });
       }
     } catch (err) {
-      setError('Network error. Please try again.');
+      setErrors({ submit: 'Network error. Please try again.' });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    
+    // Clear error for this field
+    if (errors[name]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
+
+  const handleTagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setTagsInput(value);
+    
+    const tagsArray = value.split(',').map(tag => tag.trim()).filter(Boolean);
+    setFormData((prev) => ({
+      ...prev,
+      tags: tagsArray,
+    }));
+    
+    if (errors.tags) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.tags;
+        return newErrors;
+      });
+    }
   };
 
   const validateVideoUrl = async (url: string): Promise<{ isValid: boolean; duration?: number }> => {
@@ -91,27 +146,24 @@ export default function AdminPage() {
       setVideoValid(null);
       setDetectedDuration(null);
       
-      // Try to create a video element and see if it can load metadata
       return new Promise((resolve) => {
         const video = document.createElement('video');
         video.preload = 'metadata';
         
         video.onloadedmetadata = () => {
-          // Video loaded successfully
           const duration = Math.floor(video.duration);
           setDetectedDuration(duration);
+          setFormData((prev) => ({ ...prev, duration }));
           resolve({ isValid: true, duration });
         };
         
         video.onerror = () => {
-          // Video failed to load
           resolve({ isValid: false });
         };
         
-        // Set a timeout in case the video takes too long
         setTimeout(() => {
           resolve({ isValid: false });
-        }, 10000); // 10 second timeout
+        }, 10000);
         
         video.src = url;
       });
@@ -125,22 +177,25 @@ export default function AdminPage() {
 
   const handleVideoUrlChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const url = e.target.value;
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       videoUrl: url,
-    });
+    }));
     
-    // Clear previous validation state
     setVideoValid(null);
     setDetectedDuration(null);
     
-    // If URL is not empty, validate it
+    if (errors.videoUrl) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.videoUrl;
+        return newErrors;
+      });
+    }
+    
     if (url.trim()) {
       const result = await validateVideoUrl(url);
       setVideoValid(result.isValid);
-      if (result.isValid && result.duration) {
-        setDetectedDuration(result.duration);
-      }
     }
   };
 
@@ -158,7 +213,6 @@ export default function AdminPage() {
       <Header />
       <div className="min-h-screen bg-black py-4 sm:py-12">
         <div className="container mx-auto px-4">
-          {/* Header */}
           <div className="mb-4 sm:mb-8">
             <div className="flex items-center gap-4 mb-2">
               <div className="p-3 bg-linear-to-br from-[#E50914] to-[#c20913] rounded-xl">
@@ -171,7 +225,6 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* Success Message */}
           {success && (
             <div className="mb-6 p-4 bg-green-900/30 border border-green-500/50 rounded-lg flex items-center gap-3">
               <Check className="h-5 w-5 text-green-500" />
@@ -179,15 +232,13 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* Error Message */}
-          {error && (
+          {errors.submit && (
             <div className="mb-6 p-4 bg-red-900/30 border border-red-500/50 rounded-lg flex items-center gap-3">
               <AlertCircle className="h-5 w-5 text-red-500" />
-              <span className="text-red-400 font-medium">{error}</span>
+              <span className="text-red-400 font-medium">{errors.submit}</span>
             </div>
           )}
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Video URL Section */}
             <div className="bg-linear-to-br from-gray-900/80 to-gray-900/40 border border-gray-800 rounded-2xl p-6 sm:p-8 shadow-xl">
@@ -213,7 +264,7 @@ export default function AdminPage() {
                   placeholder="https://example.com/video.mp4"
                   className={`w-full bg-gray-950/50 border-2 rounded-xl px-4 py-3.5 text-white placeholder-gray-500 focus:outline-none transition-all pr-12 ${
                     videoValid === true ? 'border-green-500/50 focus:border-green-500 bg-green-500/5' : 
-                    videoValid === false ? 'border-red-500/50 focus:border-red-500 bg-red-500/5' : 
+                    videoValid === false || errors.videoUrl ? 'border-red-500/50 focus:border-red-500 bg-red-500/5' : 
                     'border-gray-700/50 focus:border-[#E50914]/50'
                   }`}
                 />
@@ -237,8 +288,16 @@ export default function AdminPage() {
                 )}
               </div>
               
-              {/* Validation Message */}
-              {videoValid === false && (
+              {errors.videoUrl && (
+                <div className="mt-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                  <p className="text-xs text-red-400 flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    {errors.videoUrl}
+                  </p>
+                </div>
+              )}
+              
+              {videoValid === false && !errors.videoUrl && (
                 <div className="mt-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
                   <p className="text-xs text-red-400 flex items-center gap-2">
                     <AlertCircle className="h-4 w-4 shrink-0" />
@@ -246,6 +305,7 @@ export default function AdminPage() {
                   </p>
                 </div>
               )}
+              
               {videoValid === true && detectedDuration !== null && (
                 <div className="mt-3 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
                   <div className="flex items-center justify-between">
@@ -261,17 +321,16 @@ export default function AdminPage() {
                 </div>
               )}
               
-              {/* Sample Videos */}
               <div className="mt-4 pt-4 border-t border-gray-800/50">
                 <p className="text-xs font-semibold text-gray-400 mb-3">Quick test with sample videos:</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {sampleVideos.slice(0, 6).map((url, index) => (
+                  {sampleVideos.map((url, index) => (
                     <button
                       key={index}
                       type="button"
                       onClick={() => {
                         setFormData({ ...formData, videoUrl: url });
-                        handleVideoUrlChange({ target: { value: url } } as any);
+                       handleVideoUrlChange({ target: { value: url } } as React.ChangeEvent<HTMLInputElement>);
                       }}
                       className="text-left px-3 py-2.5 bg-gray-800/30 hover:bg-gray-800/60 border border-gray-700/50 hover:border-[#E50914]/50 rounded-lg text-xs text-gray-400 hover:text-white transition-all group"
                     >
@@ -283,7 +342,6 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* Title and Tags Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Title */}
               <div className="bg-linear-to-br from-gray-900/80 to-gray-900/40 border border-gray-800 rounded-2xl p-6 shadow-xl">
@@ -297,8 +355,13 @@ export default function AdminPage() {
                   onChange={handleChange}
                   required
                   placeholder="Enter an engaging title"
-                  className="w-full bg-gray-950/50 border-2 border-gray-700/50 focus:border-[#E50914]/50 rounded-xl px-4 py-3.5 text-white placeholder-gray-500 focus:outline-none transition-all"
+                  className={`w-full bg-gray-950/50 border-2 rounded-xl px-4 py-3.5 text-white placeholder-gray-500 focus:outline-none transition-all ${
+                    errors.title ? 'border-red-500/50 focus:border-red-500' : 'border-gray-700/50 focus:border-[#E50914]/50'
+                  }`}
                 />
+                {errors.title && (
+                  <p className="mt-2 text-xs text-red-400">{errors.title}</p>
+                )}
               </div>
 
               {/* Tags */}
@@ -309,13 +372,18 @@ export default function AdminPage() {
                 <input
                   type="text"
                   name="tags"
-                  value={formData.tags}
-                  onChange={handleChange}
+                  value={tagsInput}
+                  onChange={handleTagsChange}
                   required
                   placeholder="animation, nature, adventure"
-                  className="w-full bg-gray-950/50 border-2 border-gray-700/50 focus:border-[#E50914]/50 rounded-xl px-4 py-3.5 text-white placeholder-gray-500 focus:outline-none transition-all"
+                  className={`w-full bg-gray-950/50 border-2 rounded-xl px-4 py-3.5 text-white placeholder-gray-500 focus:outline-none transition-all ${
+                    errors.tags ? 'border-red-500/50 focus:border-red-500' : 'border-gray-700/50 focus:border-[#E50914]/50'
+                  }`}
                 />
                 <p className="mt-2 text-xs text-gray-500">Separate tags with commas</p>
+                {errors.tags && (
+                  <p className="mt-1 text-xs text-red-400">{errors.tags}</p>
+                )}
               </div>
             </div>
 
@@ -330,11 +398,15 @@ export default function AdminPage() {
                 onChange={handleChange}
                 rows={5}
                 placeholder="Describe your video content..."
-                className="w-full bg-gray-950/50 border-2 border-gray-700/50 focus:border-[#E50914]/50 rounded-xl px-4 py-3.5 text-white placeholder-gray-500 focus:outline-none transition-all resize-none"
+                className={`w-full bg-gray-950/50 border-2 rounded-xl px-4 py-3.5 text-white placeholder-gray-500 focus:outline-none transition-all resize-none ${
+                  errors.description ? 'border-red-500/50 focus:border-red-500' : 'border-gray-700/50 focus:border-[#E50914]/50'
+                }`}
               />
+              {errors.description && (
+                <p className="mt-2 text-xs text-red-400">{errors.description}</p>
+              )}
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading || videoValid !== true}
@@ -354,7 +426,6 @@ export default function AdminPage() {
             </button>
           </form>
 
-          {/* Info Box */}
           <div className="mt-8 p-6 bg-gray-900/30 border border-gray-800 rounded-xl">
             <h3 className="text-white font-semibold mb-2 flex items-center gap-2">
               <AlertCircle className="h-5 w-5 text-[#E50914]" />
@@ -365,13 +436,12 @@ export default function AdminPage() {
               <li>• Make sure the video URL is publicly accessible</li>
               <li>• Video URLs are validated before adding to ensure they work</li>
               <li>• Supported format: MP4</li>
-              <li>• Duration and quality are detected automatically from the video</li>
+              <li>• Duration is detected automatically from the video</li>
               <li>• All fields marked with * are required</li>
             </ul>
           </div>
         </div>
 
-        {/* Success Modal */}
         {showSuccessModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
             <div className="bg-gray-900 border border-gray-700 rounded-xl p-8 max-w-md w-full mx-4 text-center">
