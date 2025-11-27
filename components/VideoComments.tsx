@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ThumbsUp } from 'lucide-react';
 import { ShortVideo, Comment } from '@/lib/schemas';
 import { useVideoPlayerStore } from '@/lib/videoPlayerStore';
+import { useVideoStore } from '@/lib/store';
 
 interface VideoCommentsProps {
   video: ShortVideo;
@@ -13,27 +14,16 @@ export default function VideoComments({ video: initialVideo }: VideoCommentsProp
   const [video, setVideo] = useState(initialVideo);
   const [comments, setComments] = useState<Comment[]>(initialVideo.comments || []);
   const { newComment, setNewComment } = useVideoPlayerStore();
+  const { updateVideoComment } = useVideoStore();
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
 
     try {
-      const response = await fetch('/api/shorts', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: video.id,
-          action: 'comment',
-          comment: { author: 'User', text: newComment.trim() },
-        }),
-      });
-
-      if (response.ok) {
-        const updatedVideo = await response.json();
-        setVideo(updatedVideo);
-        setComments(updatedVideo.comments || []);
-        setNewComment('');
-      }
+      const updatedVideo = await updateVideoComment(video.id, { author: 'User', text: newComment.trim() });
+      setVideo(updatedVideo);
+      setComments(updatedVideo.comments || []);
+      setNewComment('');
     } catch (error) {
       console.error('Failed to add comment:', error);
     }
