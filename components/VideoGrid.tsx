@@ -20,6 +20,7 @@ export default function VideoGridClient({ initialVideos }: VideoGridClientProps)
     selectedTag,
     setSelectedTag,
     isTrending,
+    updateVideoLike,
   } = useVideoStore();
 
   const [likedVideos, setLikedVideos] = useState<Set<string>>(new Set());
@@ -70,14 +71,7 @@ export default function VideoGridClient({ initialVideos }: VideoGridClientProps)
 
     // Sync with backend
     try {
-      await fetch('/api/shorts', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: videoId,
-          action: wasLiked ? 'unlike' : 'like',
-        }),
-      });
+      await updateVideoLike(videoId, wasLiked ? 'unlike' : 'like');
     } catch (error) {
       // Rollback on error
       setLikedVideos((prev) => {

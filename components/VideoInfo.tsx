@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ThumbsUp, ThumbsDown, Share2, Flag } from 'lucide-react';
 import { ShortVideo } from '@/lib/schemas';
 import { useVideoPlayerStore } from '@/lib/videoPlayerStore';
+import { useVideoStore } from '@/lib/store';
 import { formatCount } from '@/lib/utils';
 
 interface VideoInfoProps {
@@ -12,6 +13,7 @@ interface VideoInfoProps {
 
 export default function VideoInfo({ video: initialVideo }: VideoInfoProps) {
   const [video, setVideo] = useState(initialVideo);
+  const { updateVideoLike, updateVideoRating } = useVideoStore();
   const { isLiked, isDisliked, userRating, hasRated, setIsLiked, setIsDisliked, setUserRating, setHasRated } =
     useVideoPlayerStore();
 
@@ -20,16 +22,8 @@ export default function VideoInfo({ video: initialVideo }: VideoInfoProps) {
     setIsLiked(!isLiked);
 
     try {
-      const response = await fetch('/api/shorts', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: video.id, action }),
-      });
-
-      if (response.ok) {
-        const updatedVideo = await response.json();
-        setVideo(updatedVideo);
-      }
+      const updatedVideo = await updateVideoLike(video.id, action);
+      setVideo(updatedVideo);
     } catch (error) {
       console.error('Failed to update like:', error);
       setIsLiked(isLiked); // Rollback
@@ -59,18 +53,12 @@ export default function VideoInfo({ video: initialVideo }: VideoInfoProps) {
     setHasRated(true);
 
     try {
-      const response = await fetch('/api/shorts', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: video.id, action: 'rate', rating }),
-      });
-
-      if (response.ok) {
-        const updatedVideo = await response.json();
-        setVideo(updatedVideo);
-      }
+      const updatedVideo = await updateVideoRating(video.id, rating);
+      setVideo(updatedVideo);
     } catch (error) {
       console.error('Failed to add rating:', error);
+      setHasRated(false);
+      setUserRating(0);
     }
   };
 

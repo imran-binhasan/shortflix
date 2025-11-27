@@ -16,6 +16,7 @@ interface VideoStore {
   // Basic actions
   setVideos: (videos: ShortVideo[]) => void;
   addVideo: (video: ShortVideo) => void;
+  updateVideo: (id: string, updates: Partial<ShortVideo>) => void;
   setCurrentVideoIndex: (index: number) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -24,6 +25,12 @@ interface VideoStore {
   setSearchQuery: (query: string) => void;
   setSelectedTag: (tag: string | null) => void;
   setIsTrending: (trending: boolean) => void;
+
+  // API actions
+  updateVideoLike: (id: string, action: 'like' | 'unlike') => Promise<ShortVideo>;
+  updateVideoRating: (id: string, rating: number) => Promise<ShortVideo>;
+  updateVideoComment: (id: string, comment: { author: string; text: string }) => Promise<ShortVideo>;
+  updateVideoDuration: (id: string, duration: number) => Promise<ShortVideo>;
 
   // Fetch videos
   fetchVideos: () => Promise<void>;
@@ -42,6 +49,9 @@ export const useVideoStore = create<VideoStore>((set) => ({
   // Basic setters
   setVideos: (videos) => set({ videos }),
   addVideo: (video) => set((state) => ({ videos: [video, ...state.videos] })),
+  updateVideo: (id, updates) => set((state) => ({
+    videos: state.videos.map(v => v.id === id ? { ...v, ...updates } : v)
+  })),
   setCurrentVideoIndex: (index) => set({ currentVideoIndex: index }),
   setLoading: (loading) => set({ isLoading: loading }),
   setError: (error) => set({ error }),
@@ -50,6 +60,63 @@ export const useVideoStore = create<VideoStore>((set) => ({
   setSearchQuery: (query) => set({ searchQuery: query }),
   setSelectedTag: (tag) => set({ selectedTag: tag }),
   setIsTrending: (trending) => set({ isTrending: trending }),
+
+  // API actions
+  updateVideoLike: async (id, action) => {
+    const res = await fetch('/api/shorts', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, action }),
+    });
+    if (!res.ok) throw new Error('Failed to update like');
+    const updatedVideo: ShortVideo = await res.json();
+    set((state) => ({
+      videos: state.videos.map(v => v.id === id ? updatedVideo : v)
+    }));
+    return updatedVideo;
+  },
+
+  updateVideoRating: async (id, rating) => {
+    const res = await fetch('/api/shorts', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, action: 'rate', rating }),
+    });
+    if (!res.ok) throw new Error('Failed to update rating');
+    const updatedVideo: ShortVideo = await res.json();
+    set((state) => ({
+      videos: state.videos.map(v => v.id === id ? updatedVideo : v)
+    }));
+    return updatedVideo;
+  },
+
+  updateVideoComment: async (id, comment) => {
+    const res = await fetch('/api/shorts', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, action: 'comment', comment }),
+    });
+    if (!res.ok) throw new Error('Failed to add comment');
+    const updatedVideo: ShortVideo = await res.json();
+    set((state) => ({
+      videos: state.videos.map(v => v.id === id ? updatedVideo : v)
+    }));
+    return updatedVideo;
+  },
+
+  updateVideoDuration: async (id, duration) => {
+    const res = await fetch('/api/shorts', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, action: 'updateDuration', duration }),
+    });
+    if (!res.ok) throw new Error('Failed to update duration');
+    const updatedVideo: ShortVideo = await res.json();
+    set((state) => ({
+      videos: state.videos.map(v => v.id === id ? updatedVideo : v)
+    }));
+    return updatedVideo;
+  },
 
   // Fetch videos from API
   fetchVideos: async () => {

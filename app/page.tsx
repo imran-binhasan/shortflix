@@ -7,8 +7,7 @@ import VideoGridClient from '@/components/VideoGrid';
 async function getVideos(): Promise<ShortVideo[]> {
   try {
     // Fetch from your own API route
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/shorts`, {
+    const res = await fetch('/api/shorts', {
       cache: 'no-store', // Always get fresh data
       // Or use: next: { revalidate: 60 } for ISR
     });

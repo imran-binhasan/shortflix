@@ -4,6 +4,7 @@ import { useRef, useEffect, useState } from 'react';
 import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, SkipForward, SkipBack } from 'lucide-react';
 import { ShortVideo } from '@/lib/schemas';
 import { useVideoPlayerStore } from '@/lib/videoPlayerStore';
+import { useVideoStore } from '@/lib/store';
 import { formatDuration } from '@/lib/utils';
 
 interface VideoPlayerProps {
@@ -14,6 +15,7 @@ interface VideoPlayerProps {
 
 export default function VideoPlayer({ video, onNext, onPrevious }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const { updateVideoDuration } = useVideoStore();
   const {
     isPlaying,
     isMuted,
@@ -146,15 +148,7 @@ export default function VideoPlayer({ video, onNext, onPrevious }: VideoPlayerPr
       // Update duration in backend if different
       if (actualDuration !== video.duration) {
         try {
-          await fetch('/api/shorts', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              id: video.id,
-              action: 'updateDuration',
-              duration: actualDuration,
-            }),
-          });
+          await updateVideoDuration(video.id, actualDuration);
         } catch (error) {
           console.error('Failed to update duration:', error);
         }
@@ -217,7 +211,7 @@ export default function VideoPlayer({ video, onNext, onPrevious }: VideoPlayerPr
         onClick={togglePlay}
         onTimeUpdate={() => setCurrentTime(videoRef.current?.currentTime || 0)}
         onLoadedMetadata={handleLoadedMetadata}
-        onLoadedData={() => setVideoLoading(false)}
+        onCanPlay={() => setVideoLoading(false)}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         onEnded={handleVideoEnd}
