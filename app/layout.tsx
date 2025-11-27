@@ -10,15 +10,10 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: "SHORT-FLIX | Discover Amazing Short Videos",
-  description:
-    "A Netflix-style platform for discovering and watching short videos.",
+  description: "A Netflix-style platform for discovering and watching short videos.",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className={`${poppins.className} antialiased bg-black text-white`}>

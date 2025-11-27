@@ -2,7 +2,7 @@
 
 import { Play, Heart } from 'lucide-react';
 import Link from 'next/link';
-import { ShortVideo } from '@/types';
+import { ShortVideo } from '@/lib/schemas';
 import { formatDuration, formatCount } from '@/lib/utils';
 
 interface VideoCardProps {
